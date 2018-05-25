@@ -6,7 +6,7 @@ ThrPool::ThrPool(int sizeOfTask)
 
     for(int i = 0; i < this->mSize; ++i)
     {
-        mWorkThreads.push_back(std::thread(threadFunc, flag));
+        mWorkThreads.push_back(std::thread(threadFunc, std::ref(flag)));
     }
 }
 
@@ -24,7 +24,7 @@ void ThrPool::threadFunc(std::atomic_flag& thrFlag)
 }
 
 template<typename Callable, typename... Args>
-std::future<decltype(func(args...))> ThrPool::addTask(Callable&& func, Args&&... args)
+auto ThrPool::addTask(Callable&& func, Args&&... args) -> std::future<decltype(func(args...))>
 {
     std::packaged_task<Callable(Args...)> task(std::forward(func));
 

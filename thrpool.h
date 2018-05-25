@@ -25,7 +25,7 @@ public:
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    std::future<decltype(func(args...))> addTask(Callable&& func, Args&&... args);
+    auto addTask(Callable&& func, Args&&... args) -> std::future<decltype(func(args...))>;
 };
 
 #endif // THRPOOL_H
