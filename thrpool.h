@@ -31,7 +31,25 @@ public:
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    auto addTask(Callable&& func, Args&&... args) -> std::future<decltype(func(args...))>;
+    auto addTask(Callable&& func, Args&&... args) -> std::future<decltype(func(args...))>
+    {
+        std::packaged_task<Callable(Args...)> task(std::forward(func));
+
+        std::future<decltype(func(args...))> ftTask = task.get_future();
+
+        std::function<void()> templateFunc = std::bind(std::forward(task), std::forward(args...));
+
+        {
+            std::unique_lock<std::mutex> locker(this->mLockQueue);
+
+            this->mTasks.push(templateFunc);
+        }
+
+        this->mQueueCheck.notify_one();
+
+
+        return ftTask;
+    }
 };
 
 #endif // THRPOOL_H
