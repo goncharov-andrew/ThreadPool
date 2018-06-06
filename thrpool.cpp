@@ -6,20 +6,44 @@ ThrPool::ThrPool(int sizeOfTask)
 
     for(int i = 0; i < this->mSize; ++i)
     {
-        mWorkThreads.push_back(std::thread(threadFunc, std::ref(flag)));
+        mWorkThreads.push_back(std::thread([this](){threadFunc();}));
     }
 }
 
 ThrPool::~ThrPool()
 {
     flag.clear();
+
+    for(int i = 0; i < this->mSize; ++i)
+    {
+        mWorkThreads[i].join();
+    }
 }
 
-void ThrPool::threadFunc(std::atomic_flag& thrFlag)
+void ThrPool::threadFunc()
 {
-    while(false != thrFlag.test_and_set())
-    {
+    std::function<void()> exFunc;
+    std::mutex mutex;
+    std::unique_lock<std::mutex> locker(mutex);
 
+    while(false != this->flag.test_and_set())
+    {
+        this->mQueueCheck.wait(locker);
+
+        mutex.lock();
+        if(true != mTasks.empty())
+        {
+            exFunc = mTasks.front();
+            mTasks.pop();
+
+            mutex.unlock();
+
+            exFunc();
+        }
+        else
+        {
+            mutex.unlock();
+        }
     }
 }
 
@@ -32,7 +56,16 @@ auto ThrPool::addTask(Callable&& func, Args&&... args) -> std::future<decltype(f
 
     std::function<void()> templateFunc = std::bind(std::forward(task), std::forward(args...));
 
+
+    std::mutex mutex;
+
+    mutex.lock();
+
     this->mTasks.push(templateFunc);
+
+    mutex.unlock();
+
+    this->mQueueCheck.notify_one();
 
     return ftTask;
 }

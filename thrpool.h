@@ -7,10 +7,16 @@
 #include<future>
 #include<functional>
 #include<atomic>
+#include<mutex>
+#include<condition_variable>
 
 class ThrPool
 {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
+
+    std::condition_variable mQueueCheck;
+
+    std::mutex mLockQueue;
 
     int mSize;
 
@@ -18,7 +24,7 @@ class ThrPool
 
     std::queue<std::function<void()>> mTasks;
 
-    static void threadFunc(std::atomic_flag &thrFlag);
+    void threadFunc();
 
 public:
     ThrPool(int sizeOfTask);
