@@ -23,26 +23,25 @@ ThrPool::~ThrPool()
 void ThrPool::threadFunc()
 {
     std::function<void()> exFunc;
-    std::mutex mutex;
-    std::unique_lock<std::mutex> locker(mutex);
 
     while(false != this->flag.test_and_set())
     {
+        std::unique_lock<std::mutex> locker(this->mLockQueue);
+
         this->mQueueCheck.wait(locker);
 
-        mutex.lock();
         if(true != mTasks.empty())
         {
             exFunc = mTasks.front();
             mTasks.pop();
 
-            mutex.unlock();
+            this->mLockQueue.unlock();
 
             exFunc();
         }
         else
         {
-            mutex.unlock();
+            this->mLockQueue.unlock();
         }
     }
 }
@@ -56,16 +55,14 @@ auto ThrPool::addTask(Callable&& func, Args&&... args) -> std::future<decltype(f
 
     std::function<void()> templateFunc = std::bind(std::forward(task), std::forward(args...));
 
+    {
+        std::unique_lock<std::mutex> locker(this->mLockQueue);
 
-    std::mutex mutex;
-
-    mutex.lock();
-
-    this->mTasks.push(templateFunc);
-
-    mutex.unlock();
+        this->mTasks.push(templateFunc);
+    }
 
     this->mQueueCheck.notify_one();
+
 
     return ftTask;
 }
