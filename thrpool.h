@@ -33,11 +33,11 @@ public:
     template<typename Callable, typename... Args>
     auto addTask(Callable&& func, Args&&... args) -> std::future<decltype(func(args...))>
     {
-        std::packaged_task<Callable(Args...)> task(std::forward(func));
+        std::packaged_task<decltype(func(args...))(args...)> task(std::forward<decltype(func(args...))>(decltype(func)));
 
         std::future<decltype(func(args...))> ftTask = task.get_future();
 
-        std::function<void()> templateFunc = std::bind(std::forward(task), std::forward(args...));
+        std::function<void()> templateFunc = std::bind(std::forward(task), std::forward<Args>(args)...);
 
         {
             std::unique_lock<std::mutex> locker(this->mLockQueue);
