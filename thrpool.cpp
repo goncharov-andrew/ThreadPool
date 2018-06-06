@@ -35,13 +35,13 @@ void ThrPool::threadFunc()
             exFunc = mTasks.front();
             mTasks.pop();
 
-            this->mLockQueue.unlock();
+            locker.unlock();
 
             exFunc();
         }
         else
         {
-            this->mLockQueue.unlock();
+            locker.unlock();
         }
     }
 }
