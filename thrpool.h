@@ -19,6 +19,8 @@ class ThrPool
 
     std::mutex mLockQueue;
 
+    bool mFlafnotified;
+
     int mSize;
 
     std::vector<std::thread> mWorkThreads;
@@ -36,20 +38,24 @@ public:
     {
         typedef typename std::result_of<Callable(Args...)>::type retType;
 
-        auto task = std::make_shared<std::packaged_task<retType>>(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...));
+        auto task = std::make_shared<std::packaged_task<retType()>>(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...));
 
-        auto ftTask = task->get_future();
+        std::future<retType> ftTask = task->get_future();
 
-        std::function<void()> templateFunc = std::bind(std::forward(task), std::forward<Args>(args)...);
+        //std::function<void()> templateFunc = std::bind(std::forward(task), std::forward<Args>(args)...);
 
 
         {
             std::unique_lock<std::mutex> locker(this->mLockQueue);
 
-            this->mTasks.push(templateFunc);
+            this->mFlafnotified = true;
+
+            this->mTasks.push([task](){(*task)();});
+
+            this->mQueueCheck.notify_one();
         }
 
-        this->mQueueCheck.notify_one();
+
 
 
         return ftTask;

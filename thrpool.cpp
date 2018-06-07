@@ -4,6 +4,8 @@ ThrPool::ThrPool(int sizeOfTask)
 {
     this->mSize = sizeOfTask;
 
+    mFlafnotified = false;
+
     for(int i = 0; i < this->mSize; ++i)
     {
         mWorkThreads.push_back(std::thread([this](){threadFunc();}));
@@ -13,6 +15,8 @@ ThrPool::ThrPool(int sizeOfTask)
 ThrPool::~ThrPool()
 {
     flag.clear();
+
+    this->mQueueCheck.notify_all();
 
     for(int i = 0; i < this->mSize; ++i)
     {
@@ -28,7 +32,10 @@ void ThrPool::threadFunc()
     {
         std::unique_lock<std::mutex> locker(this->mLockQueue);
 
-        this->mQueueCheck.wait(locker);
+        while(!this->mFlafnotified)
+        {
+            this->mQueueCheck.wait(locker);
+        }
 
         if(true != mTasks.empty())
         {
@@ -43,7 +50,11 @@ void ThrPool::threadFunc()
         {
             locker.unlock();
         }
+
+        this->mFlafnotified = false;
     }
+
+    int a = 1;
 }
 
 
