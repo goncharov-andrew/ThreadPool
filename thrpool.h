@@ -9,6 +9,7 @@
 #include<atomic>
 #include<mutex>
 #include<condition_variable>
+#include<memory>
 
 class ThrPool
 {
@@ -31,13 +32,16 @@ public:
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    auto addTask(Callable&& func, Args&&... args) -> std::future<decltype(func(args...))>
+    std::future<typename std::result_of<Callable(Args...)>::type> addTask(Callable&& func, Args&&... args)
     {
-        std::packaged_task<decltype(func(args...))(args...)> task(std::forward<decltype(func(args...))>(decltype(func)));
+        typedef typename std::result_of<Callable(Args...)>::type retType;
 
-        std::future<decltype(func(args...))> ftTask = task.get_future();
+        auto task = std::make_shared<std::packaged_task<retType>>(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...));
+
+        auto ftTask = task->get_future();
 
         std::function<void()> templateFunc = std::bind(std::forward(task), std::forward<Args>(args)...);
+
 
         {
             std::unique_lock<std::mutex> locker(this->mLockQueue);
