@@ -13,13 +13,11 @@
 
 class ThrPool
 {
-    std::atomic_flag flag = ATOMIC_FLAG_INIT;
+    bool flag;
 
     std::condition_variable mQueueCheck;
 
-    std::mutex mLockQueue;
-
-    bool mFlafnotified;
+    std::mutex mLockQueueMutex;
 
     int mSize;
 
@@ -42,21 +40,13 @@ public:
 
         std::future<retType> ftTask = task->get_future();
 
-        //std::function<void()> templateFunc = std::bind(std::forward(task), std::forward<Args>(args)...);
-
-
         {
-            std::unique_lock<std::mutex> locker(this->mLockQueue);
-
-            this->mFlafnotified = true;
+            std::unique_lock<std::mutex> locker(this->mLockQueueMutex);
 
             this->mTasks.push([task](){(*task)();});
 
             this->mQueueCheck.notify_one();
         }
-
-
-
 
         return ftTask;
     }
