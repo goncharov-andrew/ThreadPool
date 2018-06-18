@@ -33,12 +33,16 @@ void ThrPool::threadFunc()
 {  
     while(false != this->flag)
     {
+        while(true != mTasks.empty())
         {
             std::unique_lock<std::mutex> locker(this->mLockQueueMutex);
 
-            this->mQueueCheck.wait(locker);
+            if(false != this->flag)
+            {
+                this->mQueueCheck.wait(locker);
+            }
 
-            if(0 != mTasks.size())
+            if(true != mTasks.empty())
             {
                 std::function<void()> exFunc = mTasks.front();
 
