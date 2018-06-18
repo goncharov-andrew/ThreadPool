@@ -1,13 +1,13 @@
 #include "thrpool.h"
 
 
-ThrPool::ThrPool(int sizeOfTask)
+ThrPool::ThrPool(size_t sizeOfTask)
 {
     this->mSize = sizeOfTask;
 
-    this->flag = true;
+    this->mFlag = true;
 
-    for(int i = 0; i < this->mSize; ++i)
+    for(size_t i = 0; i < this->mSize; ++i)
     {
         mWorkThreads.push_back(std::thread([this](){threadFunc();}));
     }
@@ -18,7 +18,7 @@ ThrPool::~ThrPool()
     {
         std::unique_lock<std::mutex> locker(this->mLockQueueMutex);
 
-        this->flag = false;
+        this->mFlag = false;
 
         this->mQueueCheck.notify_all();
     }
@@ -31,31 +31,28 @@ ThrPool::~ThrPool()
 
 void ThrPool::threadFunc()
 {  
-    while(false != this->flag)
+    while(false != this->mFlag || true != mTasks.empty())
     {
-        while(true != mTasks.empty())
+        std::unique_lock<std::mutex> locker(this->mLockQueueMutex);
+
+        if(false != this->mFlag)
         {
-            std::unique_lock<std::mutex> locker(this->mLockQueueMutex);
+            this->mQueueCheck.wait(locker);
+        }
 
-            if(false != this->flag)
-            {
-                this->mQueueCheck.wait(locker);
-            }
+        if(true != mTasks.empty())
+        {
+            std::function<void()> exFunc = mTasks.front();
 
-            if(true != mTasks.empty())
-            {
-                std::function<void()> exFunc = mTasks.front();
+            mTasks.pop();
 
-                mTasks.pop();
+            locker.unlock();
 
-                locker.unlock();
-
-                exFunc();
-            }
-            else
-            {
-                locker.unlock();
-            }
+            exFunc();
+        }
+        else
+        {
+            locker.unlock();
         }
     }
 }

@@ -13,13 +13,15 @@
 
 class ThrPool
 {
-    bool flag;
+private:
+
+    bool mFlag;
 
     std::condition_variable mQueueCheck;
 
     std::mutex mLockQueueMutex;
 
-    int mSize;
+    size_t mSize;
 
     std::vector<std::thread> mWorkThreads;
 
@@ -28,13 +30,13 @@ class ThrPool
     void threadFunc();
 
 public:
-    ThrPool(int sizeOfTask);
+    ThrPool(size_t sizeOfTask);
     ~ThrPool();
 
     template<typename Callable, typename... Args>
     std::future<typename std::result_of<Callable(Args...)>::type> addTask(Callable&& func, Args&&... args)
     {
-        typedef typename std::result_of<Callable(Args...)>::type retType;
+        using retType = typename std::result_of<Callable(Args...)>::type ;
 
         auto task = std::make_shared<std::packaged_task<retType()>>(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...));
 

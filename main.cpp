@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 {
     ThrPool *pool = new ThrPool(SIZE);
 
-    for(int i = 0; i < SIZE + 10; ++i)
+    for(size_t i = 0; i < SIZE + 10; ++i)
     {
         pool->addTask(func, i);
     }
