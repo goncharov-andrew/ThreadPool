@@ -30,7 +30,9 @@ private:
     void threadFunc();
 
 public:
-    ThrPool(size_t sizeOfTask);
+    ThrPool(size_t sizeOfTask = 5);
+    //ThrPool(const ThrPool& object) delete;
+    //ThrPool& operator=(const ThrPool& object) delete;
     ~ThrPool();
 
     template<typename Callable, typename... Args>

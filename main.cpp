@@ -16,16 +16,12 @@ void func(int i)
 
 int main(int argc, char *argv[])
 {
-    ThrPool *pool = new ThrPool(SIZE);
+    ThrPool pool(SIZE);
 
     for(size_t i = 0; i < SIZE + 10; ++i)
     {
-        pool->addTask(func, i);
+        pool.addTask(func, i);
     }
-
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));//sleep because ThrPool deleted before all tasks executed
-
-    delete pool;
 
     return 0;
 }
