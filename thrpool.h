@@ -53,11 +53,11 @@ public:
         std::future<retType> ftTask = task->get_future();
 
         {
-            std::unique_lock<std::mutex> locker(this->mLockQueueMutex);
+            std::unique_lock<std::mutex> locker(mLockQueueMutex);
 
-            this->mTasks.push(std::make_pair(priority, [task](){(*task)();}));
+            mTasks.push(std::make_pair(priority, [task](){(*task)();}));
 
-            this->mQueueCheck.notify_one();
+            mQueueCheck.notify_one();
         }
 
         return ftTask;
