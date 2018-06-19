@@ -27,15 +27,17 @@ private:
 
     std::vector<std::thread> mWorkThreads;
 
+    using TaskWrapper = std::pair<size_t, std::function<void()>>;
+
     struct LessThanByAge
     {
-      bool operator()(const std::pair<size_t, std::function<void()>>& lhs, const std::pair<size_t, std::function<void()>>& rhs) const
+      bool operator()(const TaskWrapper& lhs, const TaskWrapper& rhs) const
       {
         return lhs.first < rhs.first;
       }
     };
 
-    std::priority_queue<size_t, std::deque<std::pair<size_t, std::function<void()>>>, LessThanByAge> mTasks;
+    std::priority_queue<size_t, std::deque<TaskWrapper>, LessThanByAge> mTasks;
 
     void threadFunc();
 
