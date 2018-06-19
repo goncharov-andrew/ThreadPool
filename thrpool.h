@@ -27,8 +27,6 @@ private:
 
     std::vector<std::thread> mWorkThreads;
 
-
-
     struct LessThanByAge
     {
       bool operator()(const std::pair<size_t, std::function<void()>>& lhs, const std::pair<size_t, std::function<void()>>& rhs) const
