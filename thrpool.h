@@ -11,13 +11,7 @@
 #include<condition_variable>
 #include<memory>
 
-struct LessThanByAge
-{
-  bool operator()(const std::pair<int, std::function<void()>>& lhs, const std::pair<int, std::function<void()>>& rhs) const
-  {
-    return lhs.first < rhs.first;
-  }
-};
+
 
 class ThrPool
 {
@@ -33,18 +27,26 @@ private:
 
     std::vector<std::thread> mWorkThreads;
 
-    std::priority_queue<int, std::vector<std::pair<int, std::function<void()>>>, LessThanByAge> mTasks;
+
+
+    struct LessThanByAge
+    {
+      bool operator()(const std::pair<size_t, std::function<void()>>& lhs, const std::pair<size_t, std::function<void()>>& rhs) const
+      {
+        return lhs.first < rhs.first;
+      }
+    };
+
+    std::priority_queue<size_t, std::deque<std::pair<size_t, std::function<void()>>>, LessThanByAge> mTasks;
 
     void threadFunc();
 
 public:
     ThrPool(size_t sizeOfTask = 5);
-    ThrPool(const ThrPool& object) = delete;
-    ThrPool& operator=(const ThrPool& object) = delete;
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    std::future<typename std::result_of<Callable(Args...)>::type> addTask(int priority, Callable&& func, Args&&... args)
+    std::future<typename std::result_of<Callable(Args...)>::type> addTask(size_t priority, Callable&& func, Args&&... args)
     {
         using retType = typename std::result_of<Callable(Args...)>::type ;
 
