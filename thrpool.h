@@ -92,9 +92,9 @@ public:
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    auto addTask(size_t priority, Callable&& func, Args&&... args) -> std::future<typename std::result_of<Callable(Args...)>::type>
+    auto addTask(size_t priority, Callable&& func, Args&&... args) -> TaskData<std::future<typename std::result_of<Callable(Args...)>::type>>
     {
-        using retType = typename std::result_of<Callable(Args...)>::type ;
+        using retType = typename std::result_of<Callable(Args...)>::type;
 
         auto task = std::make_shared<std::packaged_task<retType()>>(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...));
 
