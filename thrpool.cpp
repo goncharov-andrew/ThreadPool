@@ -58,4 +58,7 @@ void ThrPool::threadFunc()
     }
 }
 
-
+ bool ThrPool::cancelTask(long long id)
+ {
+    return mTasks.remove(id);
+ }

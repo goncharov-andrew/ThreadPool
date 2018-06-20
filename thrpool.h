@@ -9,15 +9,16 @@
 #include<mutex>
 #include<condition_variable>
 #include<memory>
+#include <algorithm>
 
 template<typename T>
 struct TaskData
 {
 private:
     long long mID;
-    T resTask;
+    std::future<T> resTask;
 public:
-    TaskData(long long id, T &&fTask):
+    TaskData(long long id, std::future<T> &&fTask):
         mID(id)
     {
         resTask = std::move(fTask);
@@ -26,7 +27,7 @@ public:
     {
         return mID;
     }
-    /*T getFutureTask()
+    /*std::future<T> getFutureTask()
     {
         return resTask;
     }*/
@@ -83,7 +84,27 @@ private:
       }
     };
 
-    std::priority_queue<size_t, std::deque<Task>, LessThanByAge> mTasks;
+    template<typename DataType, typename Container, typename Compare>
+    class thread_priority_queue : public std::priority_queue<DataType, Container, Compare>
+    {
+    public:
+        bool remove(long long& id)
+        {
+            auto it = std::find_if(this->c.begin(), this->c.end(), [id](DataType & element) -> bool { return id == element.getID();});
+            if (it != this->c.end())
+            {
+                this->c.erase(it);
+                std::make_heap(this->c.begin(), this->c.end(), this->comp);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    };
+
+    thread_priority_queue<Task, std::deque<Task>, LessThanByAge> mTasks;
 
     void threadFunc();
 
@@ -92,7 +113,7 @@ public:
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    auto addTask(size_t priority, Callable&& func, Args&&... args) -> TaskData<std::future<typename std::result_of<Callable(Args...)>::type>>
+    auto addTask(size_t priority, Callable&& func, Args&&... args) -> TaskData<typename std::result_of<Callable(Args...)>::type>
     {
         using retType = typename std::result_of<Callable(Args...)>::type;
 
@@ -108,7 +129,7 @@ public:
             mQueueCheck.notify_one();
         }
 
-        return TaskData<std::future<retType>>(mIDTask - 1, task->get_future());
+        return TaskData<retType>(mIDTask - 1, task->get_future());
     }
 
     bool cancelTask(long long id);
