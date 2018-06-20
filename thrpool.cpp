@@ -3,6 +3,7 @@
 
 ThrPool::ThrPool(size_t sizeOfTask):
     mFlag(true),
+    mIDTask(0),
     mQueueCheck(),
     mLockQueueMutex(),
     mSize(sizeOfTask)
@@ -42,7 +43,7 @@ void ThrPool::threadFunc()
 
         if(true != mTasks.empty())
         {
-            std::function<void()> exFunc = mTasks.top().second;
+            std::function<void()> exFunc = mTasks.top().getExFunc();
 
             mTasks.pop();
 
