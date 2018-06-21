@@ -3,7 +3,7 @@
 
 ThrPool::ThrPool(size_t sizeOfTask):
     mFlag(true),
-    mIDTask(0),
+    mIDTaskCounter(0),
     mQueueCheck(),
     mLockQueueMutex(),
     mSize(sizeOfTask)
@@ -58,7 +58,7 @@ void ThrPool::threadFunc()
     }
 }
 
-bool ThrPool::cancelTask(long long id)
+bool ThrPool::cancelTask(uint64_t id)
 {
     bool result = false;
     {

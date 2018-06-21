@@ -11,27 +11,7 @@
 #include<memory>
 #include <algorithm>
 
-template<typename T>
-struct TaskData
-{
-private:
-    long long mID;
-    std::future<T> resTask;
-public:
-    TaskData(long long id, std::future<T> &&fTask):
-        mID(id)
-    {
-        resTask = std::move(fTask);
-    }
-    long long getID() const
-    {
-        return mID;
-    }
-    /*std::future<T> getFutureTask()
-    {
-        return resTask;
-    }*/
-};
+
 
 class ThrPool
 {
@@ -39,7 +19,7 @@ private:
 
     bool mFlag;
 
-    long long mIDTask;
+    uint64_t mIDTaskCounter;
 
     std::condition_variable mQueueCheck;
 
@@ -49,20 +29,44 @@ private:
 
     std::vector<std::thread> mWorkThreads;
 
-    class Task
+    template<typename T>
+    struct Task
+    {
+        friend class ThrPool;
+
+    private:
+        uint64_t mID;
+        std::future<T> resTask;
+        Task(uint64_t id, std::future<T> &&fTask):
+            mID(id),
+            resTask(std::move(fTask))
+        {}
+    public:
+        uint64_t getID() const
+        {
+            return mID;
+        }
+
+        /*std::future<T> getFutureTask()
+        {
+            return resTask;
+        }*/
+    };
+
+    class TaskData
     {
     private:
         int mPriority;
-        long long mID;
+        uint64_t mID;
         std::function<void()> mExFunc;
     public:
-        Task(int prio, long long id, std::function<void()> func):
+        TaskData(int prio, uint64_t id, std::function<void()> &&func):
             mPriority(prio),
             mID(id),
-            mExFunc(func)
+            mExFunc(std::move(func))
         {}
 
-        long long getID() const
+        uint64_t getID() const
         {
             return mID;
         }
@@ -78,7 +82,7 @@ private:
 
     struct LessThanByAge
     {
-      bool operator()(Task& lhs, Task& rhs) const
+      bool operator()(TaskData& lhs, TaskData& rhs) const
       {
         return lhs.getPriority() < rhs.getPriority();
       }
@@ -88,7 +92,7 @@ private:
     class thread_priority_queue : public std::priority_queue<DataType, Container, Compare>
     {
     public:
-        bool remove(long long& id)
+        bool remove(uint64_t& id)
         {
             auto it = std::find_if(this->c.begin(), this->c.end(), [id](DataType & element) -> bool { return id == element.getID();});
             if (it != this->c.end())
@@ -104,7 +108,7 @@ private:
         }
     };
 
-    thread_priority_queue<Task, std::deque<Task>, LessThanByAge> mTasks;
+    thread_priority_queue<TaskData, std::deque<TaskData>, LessThanByAge> mTasks;
 
     void threadFunc();
 
@@ -113,7 +117,7 @@ public:
     ~ThrPool();
 
     template<typename Callable, typename... Args>
-    auto addTask(size_t priority, Callable&& func, Args&&... args) -> TaskData<typename std::result_of<Callable(Args...)>::type>
+    auto addTask(size_t priority, Callable&& func, Args&&... args) -> Task<typename std::result_of<Callable(Args...)>::type>
     {
         using retType = typename std::result_of<Callable(Args...)>::type;
 
@@ -122,15 +126,15 @@ public:
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
 
-            mTasks.push(Task(priority, mIDTask, [task](){(*task)();}));
+            mTasks.emplace(priority, mIDTaskCounter, [task](){(*task)();});
 
-            ++mIDTask;
+            ++mIDTaskCounter;
 
             mQueueCheck.notify_one();
         }
 
-        return TaskData<retType>(mIDTask - 1, task->get_future());
+        return Task<retType>(mIDTaskCounter - 1, task->get_future());
     }
 
-    bool cancelTask(long long id);
+    bool cancelTask(uint64_t id);
 };
