@@ -58,7 +58,13 @@ void ThrPool::threadFunc()
     }
 }
 
- bool ThrPool::cancelTask(long long id)
- {
-    return mTasks.remove(id);
- }
+bool ThrPool::cancelTask(long long id)
+{
+    bool result = false;
+    {
+        std::unique_lock<std::mutex> locker(mLockQueueMutex);
+        result = mTasks.remove(id);
+    }
+
+    return result;
+}
