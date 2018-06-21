@@ -47,10 +47,10 @@ private:
             return mID;
         }
 
-        /*std::future<T> getFutureTask()
+        T getFutureTask()
         {
-            return resTask;
-        }*/
+            return resTask.get();
+        }
     };
 
     class TaskData
