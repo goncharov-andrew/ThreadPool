@@ -29,30 +29,6 @@ private:
 
     std::vector<std::thread> mWorkThreads;
 
-    template<typename T>
-    struct Task
-    {
-        friend class ThrPool;
-
-    private:
-        uint64_t mID;
-        std::future<T> resTask;
-        Task(uint64_t id, std::future<T> &&fTask):
-            mID(id),
-            resTask(std::move(fTask))
-        {}
-    public:
-        uint64_t getID() const
-        {
-            return mID;
-        }
-
-        T getFutureTask()
-        {
-            return resTask.get();
-        }
-    };
-
     class TaskData
     {
     private:
@@ -115,6 +91,31 @@ private:
 public:
     ThrPool(size_t sizeOfTask = 5);
     ~ThrPool();
+
+    template<typename T>
+    struct Task
+    {
+        friend class ThrPool;
+
+    private:
+        uint64_t mID;
+
+        Task(uint64_t id, std::future<T> &&fTask):
+            mID(id),
+            resTask(std::move(fTask))
+        {}
+    public:
+        std::future<T> resTask;
+        uint64_t getID() const
+        {
+            return mID;
+        }
+
+        /*T getFutureTask()
+        {
+            return resTask.get();
+        }*/
+    };
 
     template<typename Callable, typename... Args>
     auto addTask(size_t priority, Callable&& func, Args&&... args) -> Task<typename std::result_of<Callable(Args...)>::type>
