@@ -99,22 +99,43 @@ public:
 
     private:
         uint64_t mID;
+        std::future<T> mTask;
 
-        Task(uint64_t id, std::future<T> &&fTask):
+        Task(uint64_t id, std::future<T>&& fTask) :
             mID(id),
-            resTask(std::move(fTask))
-        {}
+            mTask(std::move(fTask))
+        {
+        }
+
     public:
-        std::future<T> resTask;
+        Task() = delete;
+        Task(const Task&) = delete;
+
+        Task(Task&& aTask) :
+            mID(aTask.mID),
+            mTask(std::move(aTask.mTask))
+        {
+        }
+
+        Task& operator=(Task&& aTask)
+        {
+            mID = aTask.mID;
+            mTask = std::move(aTask.mTask);
+
+            return *this;
+        }
+
+        Task& operator=(const Task& aTask) = delete;
+
         uint64_t getID() const
         {
             return mID;
         }
 
-        /*T getFutureTask()
+        std::future<T>& getFutureTask()
         {
-            return resTask.get();
-        }*/
+            return mTask;
+        }
     };
 
     template<typename Callable, typename... Args>
