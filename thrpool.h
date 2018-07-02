@@ -50,9 +50,9 @@ private:
         {
             return mPriority;
         }
-        std::function<void()> getExFunc() const
+        const std::function<void()>&& getExFunc() const
         {
-            return mExFunc;
+            return std::move(mExFunc);
         }
     };
 
@@ -99,42 +99,42 @@ public:
 
     private:
         uint64_t mID;
-        std::future<T> mTask;
+        std::shared_ptr<std::packaged_task<T()>> mTask;
 
-        Task(uint64_t id, std::future<T>&& fTask) :
+        Task(uint64_t id,  std::shared_ptr<std::packaged_task<T()>>&& fTask) :
             mID(id),
-            mTask(std::move(fTask))
+            mTask(std::forward<std::shared_ptr<std::packaged_task<T()>>>(fTask))
         {
         }
 
     public:
         Task() = delete;
-        Task(const Task&) = delete;
+        //Task(const Task&) = delete;
 
-        Task(Task&& aTask) :
+        Task(const Task& aTask) :
             mID(aTask.mID),
-            mTask(std::move(aTask.mTask))
+            mTask(aTask.mTask)
         {
         }
 
-        Task& operator=(Task&& aTask)
+        Task& operator=(const Task& aTask)
         {
             mID = aTask.mID;
-            mTask = std::move(aTask.mTask);
+            mTask = aTask.mTask;
 
             return *this;
         }
 
-        Task& operator=(const Task& aTask) = delete;
+        //Task& operator=(const Task& aTask) = delete;
 
         uint64_t getID() const
         {
             return mID;
         }
 
-        std::future<T>& getFutureTask()
+        const T getFutureTask()
         {
-            return mTask;
+            return mTask->get_future().get();
         }
     };
 
@@ -155,7 +155,9 @@ public:
             mQueueCheck.notify_one();
         }
 
-        return Task<retType>(mIDTaskCounter - 1, task->get_future());
+        Task<retType> retValue(mIDTaskCounter - 1, std::move(task));
+
+        return retValue;
     }
 
     bool cancelTask(uint64_t id);
