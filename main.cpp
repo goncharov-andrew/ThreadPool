@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     std::vector<int> answers;
 
-    for (size_t i = 0; i < 90; ++i)
+    for (size_t i = 0; i < 50; ++i)
     {
         a.push_back(pool.addTask(i, func, i));
     }
@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
     //auto t7 = pool.addTask(2, func, 27);
     //auto t8 = pool.addTask(1, func, 28);
     //auto t9 = pool.addTask(0, func, 29);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
     for (auto it = a.begin(); it != a.end(); ++it)
     {

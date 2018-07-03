@@ -135,7 +135,14 @@ public:
         const T getFutureTask()
         {
             std::cerr << "ref_count: " << mTask.use_count() << "\n";
-            return mTask->get_future().get();
+            if(1 == mTask.use_count())
+            {
+                return mTask->get_future().get();
+            }
+            else
+            {
+                return -1;
+            }
         }
     };
 
