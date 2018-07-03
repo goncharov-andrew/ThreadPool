@@ -10,7 +10,7 @@
 #include<condition_variable>
 #include<memory>
 #include <algorithm>
-
+#include <iostream>
 
 
 class ThrPool
@@ -50,9 +50,9 @@ private:
         {
             return mPriority;
         }
-        const std::function<void()>&& getExFunc() const
+        std::function<void()> getExFunc() const
         {
-            return std::move(mExFunc);
+            return mExFunc;
         }
     };
 
@@ -101,9 +101,9 @@ public:
         uint64_t mID;
         std::shared_ptr<std::packaged_task<T()>> mTask;
 
-        Task(uint64_t id,  std::shared_ptr<std::packaged_task<T()>>&& fTask) :
+        Task(uint64_t id,  std::shared_ptr<std::packaged_task<T()>>& fTask) :
             mID(id),
-            mTask(std::forward<std::shared_ptr<std::packaged_task<T()>>>(fTask))
+            mTask(fTask)
         {
         }
 
@@ -134,6 +134,7 @@ public:
 
         const T getFutureTask()
         {
+            std::cerr << "ref_count: " << mTask.use_count() << "\n";
             return mTask->get_future().get();
         }
     };
@@ -155,7 +156,7 @@ public:
             mQueueCheck.notify_one();
         }
 
-        Task<retType> retValue(mIDTaskCounter - 1, std::move(task));
+        Task<retType> retValue(mIDTaskCounter - 1, task);
 
         return retValue;
     }
