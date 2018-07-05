@@ -14,8 +14,6 @@ int func(int i)
     fout.flush();
     fout.close();
 
-    //_sleep(rand() / 100 + 100);
-
     return i;
 }
 
@@ -31,19 +29,6 @@ int main(int argc, char *argv[])
     {
         a.push_back(pool.addTask(i, func, i));
     }
-
-    //auto t0 = pool.addTask(0, func, 20);
-    //auto t1 = pool.addTask(1, func, 21);
-    //auto t2 = pool.addTask(0, func, 22);
-    //auto t3 = pool.addTask(1, func, 23);
-    //auto t4 = pool.addTask(2, func, 24);
-    //auto t5 = pool.addTask(1, func, 25);
-    //auto t6 = pool.addTask(3, func, 26);
-    //auto t7 = pool.addTask(2, func, 27);
-    //auto t8 = pool.addTask(1, func, 28);
-    //auto t9 = pool.addTask(0, func, 29);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
     for (auto it = a.begin(); it != a.end(); ++it)
     {

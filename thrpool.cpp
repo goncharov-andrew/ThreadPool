@@ -32,11 +32,11 @@ ThrPool::~ThrPool()
 
 void ThrPool::threadFunc()
 {  
-    while(false != mFlag || true != mTasks.empty())
+    while(false != mFlag)
     {
         std::unique_lock<std::mutex> locker(mLockQueueMutex);
 
-        if(false != mFlag)
+        if(true == mTasks.empty())
         {
             mQueueCheck.wait(locker);
         }

@@ -99,33 +99,31 @@ public:
 
     private:
         uint64_t mID;
-        std::shared_ptr<std::packaged_task<T()>> mTask;
+        std::future<T> mTask;
 
-        Task(uint64_t id,  std::shared_ptr<std::packaged_task<T()>>& fTask) :
+        Task(uint64_t id,  std::future<T>&& fTask) :
             mID(id),
-            mTask(fTask)
-        {
-        }
+            mTask(std::move(fTask))
+        {}
 
     public:
         Task() = delete;
-        //Task(const Task&) = delete;
+        Task(const Task&) = delete;
+        Task& operator=(const Task& aTask) = delete;
 
-        Task(const Task& aTask) :
+        Task(Task&& aTask) :
             mID(aTask.mID),
-            mTask(aTask.mTask)
-        {
+            mTask(std::move(aTask.mTask))
+        {     
         }
 
-        Task& operator=(const Task& aTask)
+        Task& operator=(Task&& aTask)
         {
             mID = aTask.mID;
-            mTask = aTask.mTask;
+            mTask = std::move(aTask.mTask);
 
             return *this;
         }
-
-        //Task& operator=(const Task& aTask) = delete;
 
         uint64_t getID() const
         {
@@ -134,15 +132,7 @@ public:
 
         const T getFutureTask()
         {
-            std::cerr << "ref_count: " << mTask.use_count() << "\n";
-            if(1 == mTask.use_count())
-            {
-                return mTask->get_future().get();
-            }
-            else
-            {
-                return -1;
-            }
+            return mTask.get();
         }
     };
 
@@ -163,7 +153,7 @@ public:
             mQueueCheck.notify_one();
         }
 
-        Task<retType> retValue(mIDTaskCounter - 1, task);
+        Task<retType> retValue(mIDTaskCounter - 1, task->get_future());
 
         return retValue;
     }
