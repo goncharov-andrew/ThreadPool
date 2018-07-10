@@ -11,6 +11,8 @@
 #include<memory>
 #include <algorithm>
 #include <iostream>
+#include <map>
+#include <list>
 
 
 class ThrPool
@@ -35,6 +37,8 @@ private:
         int mPriority;
         uint64_t mID;
         std::function<void()> mExFunc;
+
+
     public:
         TaskData(int prio, uint64_t id, std::function<void()> &&func):
             mPriority(prio),
@@ -84,7 +88,9 @@ private:
         }
     };
 
-    thread_priority_queue<TaskData, std::deque<TaskData>, LessThanByAge> mTasks;
+    //thread_priority_queue<, std::deque<TaskData>, LessThanByAge> mTasks;
+
+    std::map<int, std::list<TaskData>> mTasks;
 
     void threadFunc();
 
@@ -146,7 +152,7 @@ public:
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
 
-            mTasks.emplace(priority, mIDTaskCounter, [task](){(*task)();});
+            //mTasks.emplace(priority, mIDTaskCounter, [task](){(*task)();});
 
             ++mIDTaskCounter;
 

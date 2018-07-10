@@ -43,13 +43,13 @@ void ThrPool::threadFunc()
 
         if(true != mTasks.empty())
         {
-            std::function<void()> exFunc(mTasks.top().getExFunc());
+            //std::function<void()> exFunc(mTasks.top().getExFunc());
 
-            mTasks.pop();
+            //mTasks.pop();
 
             locker.unlock();
 
-            exFunc();
+            //exFunc();
         }
         else
         {
@@ -63,7 +63,7 @@ bool ThrPool::cancelTask(uint64_t id)
     bool result = false;
     {
         std::unique_lock<std::mutex> locker(mLockQueueMutex);
-        result = mTasks.remove(id);
+        //result = mTasks.remove(id);
     }
 
     return result;
