@@ -43,13 +43,24 @@ void ThrPool::threadFunc()
 
         if(true != mTasks.empty())
         {
-            //std::function<void()> exFunc(mTasks.top().getExFunc());
+            std::function<void()> exFunc;
 
-            //mTasks.pop();
+            for(size_t i = 0; i < mTasks.size(); ++i)
+            {
+                if(false == mTasks[i].empty())
+                {
+                    exFunc = std::move(mTasks[i].front().getExFunc());
+                    mTasks[i].pop_front();
 
-            locker.unlock();
+                    locker.unlock();
 
-            //exFunc();
+                    exFunc();
+
+                    break;
+                }
+            }
+
+
         }
         else
         {

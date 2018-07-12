@@ -9,10 +9,10 @@
 #include<mutex>
 #include<condition_variable>
 #include<memory>
-#include <algorithm>
-#include <iostream>
-#include <map>
-#include <list>
+#include<algorithm>
+#include<iostream>
+#include<map>
+#include<list>
 
 
 class ThrPool
@@ -90,7 +90,7 @@ private:
 
     //thread_priority_queue<, std::deque<TaskData>, LessThanByAge> mTasks;
 
-    std::map<int, std::list<TaskData>> mTasks;
+    std::map<size_t, std::list<TaskData>> mTasks;
 
     void threadFunc();
 
@@ -151,6 +151,14 @@ public:
 
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
+
+            if(mTasks.end() == mTasks.find(priority))
+            {
+                mTasks[priority] = std::list<TaskData>();
+            }
+
+            mTasks[priority].push_back(TaskData(priority, mIDTaskCounter, [task](){(*task)();}));
+
 
             //mTasks.emplace(priority, mIDTaskCounter, [task](){(*task)();});
 

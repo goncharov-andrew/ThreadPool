@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
 
     for (auto it = a.begin(); it != a.end(); ++it)
     {
-
         std::cerr << it->getFutureTask() << "\n";
     }
 
