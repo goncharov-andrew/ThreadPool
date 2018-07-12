@@ -159,9 +159,6 @@ public:
 
             mTasks[priority].push_back(TaskData(priority, mIDTaskCounter, [task](){(*task)();}));
 
-
-            //mTasks.emplace(priority, mIDTaskCounter, [task](){(*task)();});
-
             ++mIDTaskCounter;
 
             mQueueCheck.notify_one();
