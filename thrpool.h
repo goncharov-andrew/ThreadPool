@@ -208,4 +208,23 @@ public:
 
         return retValue;
     }
+
+    std::pair<bool, int> getResultOfTask(Task<void>&& task)
+    {
+        std::pair<bool, int> retValue;
+
+        if(true == task.isTaskValid)
+        {
+            retValue.first = true;
+            retValue.second = 1;
+            task.isTaskValid = false;
+        }
+        else
+        {
+            retValue.first = false;
+            retValue.second = -1;
+        }
+
+        return retValue;
+    }
 };

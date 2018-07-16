@@ -18,6 +18,16 @@ int func(int i)
     return i;
 }
 
+void vFunc()
+{
+    std::ofstream fout("./" + std::to_string(999) + ".txt");
+    fout << std::to_string(999);
+    fout.flush();
+    fout.close();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
 int main(int argc, char *argv[])
 {
     ThrPool pool(SIZE);
@@ -40,6 +50,8 @@ int main(int argc, char *argv[])
             std::cerr << resultOfTask.second << std::endl;
         }
     }
+
+    pool.addTask(1, vFunc);
 
     std::system("pause");
 
