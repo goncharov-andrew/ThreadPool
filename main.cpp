@@ -29,11 +29,16 @@ int main(int argc, char *argv[])
         a.push_back(pool.addTask(i, func, i));
     }
 
-    pool.cancelTask(48);
+    std::cerr << pool.cancelTask(a[48]) << std::endl;
 
     for (auto it = a.begin(); it != a.end(); ++it)
     {
-        std::cerr << it->getFutureTask() << "\n";
+        std::pair<bool, int> resultOfTask = pool.getResultOfTask(std::move(*it));
+
+        if(true == resultOfTask.first)
+        {
+            std::cerr << resultOfTask.second << std::endl;
+        }
     }
 
     std::system("pause");

@@ -66,24 +66,3 @@ void ThrPool::threadFunc()
         }
     }
 }
-
-bool ThrPool::cancelTask(uint64_t id)
-{
-    {
-        std::unique_lock<std::mutex> locker(mLockQueueMutex);
-        for(size_t i = 0; i < mTasks.size(); ++i)
-        {
-            for (std::list<TaskData>::iterator it = mTasks[i].begin(); it != mTasks[i].end(); ++it)
-            {
-                if(id == (*it).getID())
-                {
-                    mTasks[i].erase(it);
-
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}

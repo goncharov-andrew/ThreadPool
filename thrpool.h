@@ -88,8 +88,6 @@ private:
         }
     };
 
-    //thread_priority_queue<, std::deque<TaskData>, LessThanByAge> mTasks;
-
     std::map<size_t, std::list<TaskData>> mTasks;
 
     void threadFunc();
@@ -106,10 +104,12 @@ public:
     private:
         uint64_t mID;
         std::future<T> mTask;
+        bool isTaskValid;
 
         Task(uint64_t id,  std::future<T>&& fTask) :
             mID(id),
-            mTask(std::move(fTask))
+            mTask(std::move(fTask)),
+            isTaskValid(true)
         {}
 
     public:
@@ -119,7 +119,8 @@ public:
 
         Task(Task&& aTask) :
             mID(aTask.mID),
-            mTask(std::move(aTask.mTask))
+            mTask(std::move(aTask.mTask)),
+            isTaskValid(aTask.isTaskValid)
         {     
         }
 
@@ -127,6 +128,7 @@ public:
         {
             mID = aTask.mID;
             mTask = std::move(aTask.mTask);
+            isTaskValid = aTask.isTaskValid;
 
             return *this;
         }
@@ -134,11 +136,6 @@ public:
         uint64_t getID() const
         {
             return mID;
-        }
-
-        const T getFutureTask()
-        {
-            return mTask.get();
         }
     };
 
@@ -169,5 +166,46 @@ public:
         return retValue;
     }
 
-    bool cancelTask(uint64_t id);
+    template<typename T>
+    bool cancelTask(Task<T>& task)
+    {
+        {
+            std::unique_lock<std::mutex> locker(mLockQueueMutex);
+            for(size_t i = 0; i < mTasks.size(); ++i)
+            {
+                for (std::list<TaskData>::iterator it = mTasks[i].begin(); it != mTasks[i].end(); ++it)
+                {
+                    if(task.getID() == (*it).getID())
+                    {
+                        mTasks[i].erase(it);
+
+                        task.isTaskValid = false;
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    template<typename T>
+    std::pair<bool, T> getResultOfTask(Task<T>&& task)
+    {
+        std::pair<bool, T> retValue;
+
+        if(true == task.isTaskValid)
+        {
+            retValue.first = true;
+            retValue.second = task.mTask.get();
+            task.isTaskValid = false;
+        }
+        else
+        {
+            retValue.first = false;
+        }
+
+        return retValue;
+    }
 };
