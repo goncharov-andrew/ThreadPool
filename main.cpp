@@ -15,7 +15,7 @@ int func(int i)
     fout.flush();
     fout.close();
 
-    LOG_INFO("%s, param - %d", __FUNCTION__, i);
+    LOG_INFO("func - %s, param - %d", __FUNCTION__, i);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
