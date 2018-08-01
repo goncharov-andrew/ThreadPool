@@ -19,4 +19,5 @@ SOURCES += \
     thrpool.cpp
 
 HEADERS += \
-    thrpool.h
+    thrpool.h \
+    logging.h

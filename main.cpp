@@ -4,6 +4,8 @@
 #include "string"
 #include "vector"
 
+#include "logging.h"
+
 #define SIZE 10
 
 int func(int i)
@@ -12,6 +14,8 @@ int func(int i)
     fout << std::to_string(i);
     fout.flush();
     fout.close();
+
+    LOG_INFO("%s, param - %d", __FUNCTION__, i);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
