@@ -74,6 +74,10 @@ private:
     }
     LoggerSingleton(LoggerSingleton const &);
     LoggerSingleton & operator=(LoggerSingleton const &);
+    ~LoggerSingleton()
+    {
+        fclose (pFile);
+    }
 };
 
 //qDebug(str, ##__VA_ARGS__);
