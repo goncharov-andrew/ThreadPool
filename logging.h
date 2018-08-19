@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <atomic>
 
 class LoggerSingleton
 {
@@ -20,6 +21,8 @@ public:
     template<typename... Args>
     void writeToFile(std::string str, Args... args)
     {
+        while (m_Locked.test_and_set()) {}
+
         std::time_t t = std::time(nullptr);
         std::tm tm = *std::localtime(&t);
 
@@ -32,19 +35,22 @@ public:
         std::string strWriteToFile = strTimeDate + " " + str + "\n";
 
         fprintf (pFile, strWriteToFile.c_str(), args...);
+
+        m_Locked.clear();
     }
 private:
 
-    FILE * pFile;
+    FILE* pFile;
     std::string fileName;
+    std::atomic_flag m_Locked = ATOMIC_FLAG_INIT;
 
     LoggerSingleton()
     {
-        std::chrono::time_point<std::chrono::system_clock> t;
+        std::chrono::time_point<std::chrono::system_clock> timeNow;
 
-        t = std::chrono::system_clock::now();
+        timeNow = std::chrono::system_clock::now();
 
-        std:: string strMinutes = std::to_string(std::chrono::duration_cast<std::chrono::minutes>(t.time_since_epoch()).count());
+        std:: string strMinutes = std::to_string(std::chrono::duration_cast<std::chrono::minutes>(timeNow.time_since_epoch()).count());
 
         fileName = "./" + strMinutes + ".txt";
 
