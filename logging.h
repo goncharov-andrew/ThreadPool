@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include <atomic>
+#include <thread>
 
 class LoggerSingleton
 {
@@ -21,7 +22,7 @@ public:
     template<typename... Args>
     void writeToFile(std::string str, Args... args)
     {
-        while (m_Locked.test_and_set()) {}
+        while (m_Locked.test_and_set()) {std::this_thread::yield();}
 
         std::time_t t = std::time(nullptr);
         std::tm tm = *std::localtime(&t);
