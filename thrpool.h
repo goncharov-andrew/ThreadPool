@@ -14,10 +14,13 @@
 #include<map>
 #include<list>
 
+#include <gtest/gtest_prod.h>
 
 class ThrPool
 {
 private:
+
+    FRIEND_TEST(FirstTestCase, FirstTestSet);
 
     bool mFlag;
 
@@ -27,7 +30,7 @@ private:
 
     std::mutex mLockQueueMutex;
 
-    size_t mSize;
+    size_t mNumberOfThreads;
 
     std::vector<std::thread> mWorkThreads;
 
@@ -93,7 +96,7 @@ private:
     void threadFunc();
 
 public:
-    ThrPool(size_t sizeOfTask = 5);
+    ThrPool(size_t NumberOfThreads = 5);
     ~ThrPool();
 
     template<typename T>

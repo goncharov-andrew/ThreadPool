@@ -1,14 +1,14 @@
 #include "thrpool.h"
 
 
-ThrPool::ThrPool(size_t sizeOfTask):
+ThrPool::ThrPool(size_t NumberOfThreads):
     mFlag(true),
     mIDTaskCounter(0),
     mQueueCheck(),
     mLockQueueMutex(),
-    mSize(sizeOfTask)
+    mNumberOfThreads(NumberOfThreads)
 {
-    for(size_t i = 0; i < mSize; ++i)
+    for(size_t i = 0; i < mNumberOfThreads; ++i)
     {
         mWorkThreads.push_back(std::thread([this](){threadFunc();}));
     }
