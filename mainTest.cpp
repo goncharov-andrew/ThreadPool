@@ -2,6 +2,8 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 #include "thrpool.h"
+#include "fstream"
+#include "logging.h"
 
 using namespace testing;
 
@@ -13,6 +15,19 @@ void blockFunc()
 int returnFunc()
 {
     return 10;
+}
+
+void writeToFileFunc(int prio)
+{
+    std::ofstream fout;
+    fout.open ("./testPrio.txt", std::ofstream::out | std::ofstream::app);
+
+    fout << std::to_string(prio);
+
+    LOG_INFO("func - %s, param - %d", __FUNCTION__, prio);
+
+    fout.flush();
+    fout.close();
 }
 
 
@@ -41,6 +56,26 @@ TEST(FirstTestCase, FirstTestSet)
     ThrPool::Task<int> task3 = pool.addTask(1, returnFunc);
 
     EXPECT_EQ(std::make_pair(true, 10), pool.getResultOfTask(std::move(task3)));
+}
+
+TEST(FirstTestCase, SecondTestSet)
+{
+    std::ofstream fout("./testPrio.txt");
+    //fout << "asfdsgdsgdsbvgs";
+    fout.flush();
+    fout.close();
+
+    //LOG_INFO("func - %s", __FUNCTION__);
+
+    ThrPool pool(1);
+
+    pool.addTask(1, blockFunc);
+
+    for(int i = 0; i < 5; ++i)
+    {
+        pool.addTask(1, writeToFileFunc, 1);
+        pool.addTask(2, writeToFileFunc, 2);
+    }
 }
 
 int main(int argc, char *argv[])
