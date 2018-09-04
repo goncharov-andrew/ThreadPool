@@ -57,7 +57,5 @@ int main(int argc, char *argv[])
 
     pool.addTask(1, vFunc);
 
-    std::system("pause");
-
     return 0;
 }
