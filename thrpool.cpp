@@ -32,25 +32,20 @@ ThrPool::~ThrPool()
 
 void ThrPool::threadFunc()
 {  
-    while(false != mFlag)
+    while(true)
     {
         std::unique_lock<std::mutex> locker(mLockQueueMutex);
-
-        if(true == mTasks.empty())
-        {
-            mQueueCheck.wait(locker);
-        }
 
         if(true != mTasks.empty())
         {
             std::function<void()> exFunc;
 
-            for(size_t i = 0; i < mTasks.size(); ++i)
+            for(std::map<size_t, std::list<TaskData>>::iterator it = mTasks.begin(); it != mTasks.end(); ++it)
             {
-                if(false == mTasks[i].empty())
+                if(false == mTasks[it->first].empty())
                 {
-                    exFunc = std::move(mTasks[i].front().getExFunc());
-                    mTasks[i].pop_front();
+                    exFunc = std::move(mTasks[it->first].front().getExFunc());
+                    mTasks[it->first].pop_front();
 
                     locker.unlock();
 
@@ -58,11 +53,30 @@ void ThrPool::threadFunc()
 
                     break;
                 }
+                else
+                {
+                    it = mTasks.find(it->first);
+                    mTasks.erase(it);
+                }
             }
         }
         else
         {
             locker.unlock();
+
+            if(false == mFlag)
+            {
+                break;
+            }
+            else
+            {
+                std::unique_lock<std::mutex> locker(mLockQueueMutex);
+
+                if(true == mTasks.empty())
+                {
+                    mQueueCheck.wait(locker);
+                }
+            }
         }
     }
 }
