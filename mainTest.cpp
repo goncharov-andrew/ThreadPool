@@ -24,8 +24,6 @@ void writeToFileFunc(int prio)
 
     fout << std::to_string(prio);
 
-    LOG_INFO("func - %s, param - %d", __FUNCTION__, prio);
-
     fout.flush();
     fout.close();
 }
@@ -61,11 +59,8 @@ TEST(FirstTestCase, FirstTestSet)
 TEST(FirstTestCase, SecondTestSet)
 {
     std::ofstream fout("./testPrio.txt");
-    //fout << "asfdsgdsgdsbvgs";
     fout.flush();
     fout.close();
-
-    //LOG_INFO("func - %s", __FUNCTION__);
 
     ThrPool pool(1);
 
