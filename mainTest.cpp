@@ -28,7 +28,6 @@ void writeToFileFunc(int prio)
     fout.close();
 }
 
-
 TEST(FirstTestCase, FirstTestSet)
 {
     ThrPool pool(1);
@@ -62,15 +61,27 @@ TEST(FirstTestCase, SecondTestSet)
     fout.flush();
     fout.close();
 
-    ThrPool pool(1);
+    ThrPool *pool = new ThrPool(1);
 
-    pool.addTask(1, blockFunc);
+    pool->addTask(1, blockFunc);
 
     for(int i = 0; i < 5; ++i)
     {
-        pool.addTask(1, writeToFileFunc, 1);
-        pool.addTask(2, writeToFileFunc, 2);
+        pool->addTask(1, writeToFileFunc, 1);
+        pool->addTask(2, writeToFileFunc, 2);
     }
+
+    delete pool;
+
+    std::string strPrio;
+    std::ifstream fin("./testPrio.txt");
+    std::string line;
+    while ( std::getline(fin, line) )
+    {
+        strPrio += line;
+    }
+    fin.close();
+    EXPECT_EQ("1111122222", strPrio);
 }
 
 int main(int argc, char *argv[])
