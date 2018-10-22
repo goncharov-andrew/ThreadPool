@@ -75,7 +75,7 @@ private:
     class thread_priority_queue : public std::priority_queue<DataType, Container, Compare>
     {
     public:
-        bool remove(uint64_t& id)
+        bool remove(uint64_t id)
         {
             auto it = std::find_if(this->c.begin(), this->c.end(), [id](DataType & element) -> bool { return id == element.getID();});
             if (it != this->c.end())
@@ -91,7 +91,7 @@ private:
         }
     };
 
-    std::map<size_t, std::list<TaskData>> mTasks;
+    thread_priority_queue<TaskData, std::deque<TaskData>, LessThanByAge> mTasks;
 
     void threadFunc();
 
@@ -152,12 +152,7 @@ public:
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
 
-            if(mTasks.end() == mTasks.find(priority))
-            {
-                mTasks[priority] = std::list<TaskData>();
-            }
-
-            mTasks[priority].push_back(TaskData(priority, mIDTaskCounter, [task](){(*task)();}));
+            mTasks.push(TaskData(priority, mIDTaskCounter, [task](){(*task)();}));
 
             ++mIDTaskCounter;
 
@@ -174,19 +169,11 @@ public:
     {
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
-            for(size_t i = 0; i < mTasks.size(); ++i)
+
+            if (true == mTasks.remove(task.getID()))
             {
-                for (std::list<TaskData>::iterator it = mTasks[i].begin(); it != mTasks[i].end(); ++it)
-                {
-                    if(task.getID() == (*it).getID())
-                    {
-                        mTasks[i].erase(it);
-
-                        task.isTaskValid = false;
-
-                        return true;
-                    }
-                }
+                task.isTaskValid = false;
+                return true;
             }
         }
 

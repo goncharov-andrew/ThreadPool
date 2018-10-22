@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         a.push_back(pool.addTask(i, func, i));
     }
 
-    std::cerr << pool.cancelTask(a[48]) << std::endl;
+    std::cerr << "Cancel task: " << pool.cancelTask(a[48]) << std::endl;
 
     for (auto it = a.begin(); it != a.end(); ++it)
     {
