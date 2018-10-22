@@ -40,25 +40,17 @@ void ThrPool::threadFunc()
         {
             std::function<void()> exFunc;
 
-            for(std::map<size_t, std::list<TaskData>>::iterator it = mTasks.begin(); it != mTasks.end(); ++it)
-            {
-                if(false == mTasks[it->first].empty())
-                {
-                    exFunc = std::move(mTasks[it->first].front().getExFunc());
-                    mTasks[it->first].pop_front();
+            TaskContainer::index<TaskData::ByPriority>::type::iterator it = mTasks.get<TaskData::ByPriority>().begin();
 
-                    locker.unlock();
+            exFunc = std::move((*it).getExFunc());
 
-                    exFunc();
+            TaskContainer::index<TaskData::ByID>::type& sortByID = mTasks.get<TaskData::ByID>();
 
-                    break;
-                }
-                else
-                {
-                    it = mTasks.find(it->first);
-                    mTasks.erase(it);
-                }
-            }
+            sortByID.erase((*it).getID());
+
+            locker.unlock();
+
+            exFunc();
         }
         else
         {

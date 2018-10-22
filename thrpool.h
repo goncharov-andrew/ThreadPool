@@ -16,6 +16,11 @@
 
 #include <gtest/gtest_prod.h>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+
 class ThrPool
 {
 private:
@@ -41,7 +46,6 @@ private:
         uint64_t mID;
         std::function<void()> mExFunc;
 
-
     public:
         TaskData(int prio, uint64_t id, std::function<void()> &&func):
             mPriority(prio),
@@ -61,37 +65,19 @@ private:
         {
             return mExFunc;
         }
+
+         struct ByID {}; struct ByPriority {};
     };
 
-    struct LessThanByAge
-    {
-      bool operator()(TaskData& lhs, TaskData& rhs) const
-      {
-        return lhs.getPriority() < rhs.getPriority();
-      }
-    };
+    typedef boost::multi_index::multi_index_container<
+    TaskData,
+    boost::multi_index::indexed_by<
+        boost::multi_index::ordered_unique<boost::multi_index::tag<TaskData::ByID>, boost::multi_index::const_mem_fun<TaskData, uint64_t, &TaskData::getID>>,
+        boost::multi_index::ordered_non_unique<boost::multi_index::tag<TaskData::ByPriority>, boost::multi_index::const_mem_fun<TaskData, int, &TaskData::getPriority>>
+        >
+    > TaskContainer;
 
-    template<typename DataType, typename Container, typename Compare>
-    class thread_priority_queue : public std::priority_queue<DataType, Container, Compare>
-    {
-    public:
-        bool remove(uint64_t& id)
-        {
-            auto it = std::find_if(this->c.begin(), this->c.end(), [id](DataType & element) -> bool { return id == element.getID();});
-            if (it != this->c.end())
-            {
-                this->c.erase(it);
-                std::make_heap(this->c.begin(), this->c.end(), this->comp);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-    };
-
-    std::map<size_t, std::list<TaskData>> mTasks;
+    TaskContainer mTasks;
 
     void threadFunc();
 
@@ -152,12 +138,7 @@ public:
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
 
-            if(mTasks.end() == mTasks.find(priority))
-            {
-                mTasks[priority] = std::list<TaskData>();
-            }
-
-            mTasks[priority].push_back(TaskData(priority, mIDTaskCounter, [task](){(*task)();}));
+            mTasks.insert(TaskData(priority, mIDTaskCounter, [task](){(*task)();}));
 
             ++mIDTaskCounter;
 
@@ -172,25 +153,25 @@ public:
     template<typename T>
     bool cancelTask(Task<T>& task)
     {
+        bool retValue = false;
+
         {
             std::unique_lock<std::mutex> locker(mLockQueueMutex);
-            for(size_t i = 0; i < mTasks.size(); ++i)
+
+            TaskContainer::index<TaskData::ByID>::type& sortByID = mTasks.get<TaskData::ByID>();
+
+            TaskContainer::index<TaskData::ByID>::type::iterator it = sortByID.find(task.getID());
+
+            if(it != sortByID.end())
             {
-                for (std::list<TaskData>::iterator it = mTasks[i].begin(); it != mTasks[i].end(); ++it)
-                {
-                    if(task.getID() == (*it).getID())
-                    {
-                        mTasks[i].erase(it);
+                sortByID.erase(task.getID());
 
-                        task.isTaskValid = false;
-
-                        return true;
-                    }
-                }
+                task.isTaskValid = false;
+                retValue = true;
             }
         }
 
-        return false;
+        return retValue;
     }
 
     template<typename T>
