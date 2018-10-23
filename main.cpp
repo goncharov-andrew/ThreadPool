@@ -8,7 +8,7 @@
 #include "logging.h"
 
 #define SIZE 5
-#define NUMBER_OF_TASKS 100000
+#define NUMBER_OF_TASKS 1000000
 
 int* TestMas = new int[NUMBER_OF_TASKS];
 bool flag = false;
@@ -20,7 +20,7 @@ int testStressFunc(int i)
 
     TestMas[i] = i;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     return i;
 }
@@ -59,6 +59,8 @@ int main(int argc, char *argv[])
         std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
         timeResults.push_back(fp_ms.count());
+
+        flag = false;
     }
 
 
