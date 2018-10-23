@@ -3,59 +3,70 @@
 #include "fstream"
 #include "string"
 #include "vector"
+#include <iterator>
 
 #include "logging.h"
 
-#define SIZE 10
+#define SIZE 5
+#define NUMBER_OF_TASKS 1000000
 
-int func(int i)
+int* TestMas = new int[NUMBER_OF_TASKS];
+bool flag = false;
+
+int testStressFunc(int i)
 {
-    std::ofstream fout("./" + std::to_string(i) + ".txt");
-    fout << std::to_string(i);
-    fout.flush();
-    fout.close();
+    while(false == flag)
+    {}
 
-    LOG_INFO("func - %s, param - %d", __FUNCTION__, i);
+    TestMas[i] = i;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     return i;
-}
-
-void vFunc()
-{
-    std::ofstream fout("./" + std::to_string(999) + ".txt");
-    fout << std::to_string(999);
-    fout.flush();
-    fout.close();
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 int main(int argc, char *argv[])
 {
     ThrPool pool(SIZE);
 
-    std::vector<ThrPool::Task<int>> a;
+    std::vector<double> timeResults;
 
-    for (size_t i = 0; i < 50; ++i)
+    for(int z = 0; z < 10; ++z)
     {
-        a.push_back(pool.addTask(i, func, i));
-    }
+        std::vector<ThrPool::Task<int>> a;
 
-    std::cerr << "Cancel task: " << pool.cancelTask(a[48]) << std::endl;
-
-    for (auto it = a.begin(); it != a.end(); ++it)
-    {
-        std::pair<bool, int> resultOfTask = pool.getResultOfTask(std::move(*it));
-
-        if(true == resultOfTask.first)
+        for (size_t i = 0; i < NUMBER_OF_TASKS; ++i)
         {
-            std::cerr << resultOfTask.second << std::endl;
+            a.push_back(pool.addTask(1, testStressFunc, i));
         }
+
+        flag = true;
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+
+        for (auto it = a.begin(); it != a.end(); ++it)
+        {
+            std::pair<bool, int> resultOfTask = pool.getResultOfTask(std::move(*it));
+
+            if(true == resultOfTask.first)
+            {
+                std::cerr << resultOfTask.second << std::endl;
+            }
+        }
+
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+
+        timeResults.push_back(fp_ms.count());
+
+        flag = false;
     }
 
-    pool.addTask(1, vFunc);
+
+    std::ofstream output_file("./results.txt");
+    std::ostream_iterator<double> output_iterator(output_file, "\n");
+    std::copy(timeResults.begin(), timeResults.end(), output_iterator);
 
     return 0;
 }
