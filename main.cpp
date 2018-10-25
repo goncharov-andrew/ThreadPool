@@ -7,8 +7,8 @@
 
 #include "logging.h"
 
-#define SIZE 5
-#define NUMBER_OF_TASKS 1000000
+#define NUMBER_OF_THREADS 4
+#define NUMBER_OF_TASKS   1000000
 
 int* TestMas = new int[NUMBER_OF_TASKS];
 bool flag = false;
@@ -27,7 +27,7 @@ int testStressFunc(int i)
 
 int main(int argc, char *argv[])
 {
-    ThrPool pool(SIZE);
+    ThrPool pool(NUMBER_OF_THREADS);
 
     std::vector<double> timeResults;
 
@@ -35,14 +35,20 @@ int main(int argc, char *argv[])
     {
         std::vector<ThrPool::Task<int>> a;
 
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         for (size_t i = 0; i < NUMBER_OF_TASKS; ++i)
         {
-            a.push_back(pool.addTask(1, testStressFunc, i));
+            a.push_back(pool.addTask(1, testStressFunc, i));//rand() % 5
         }
 
         flag = true;
 
-        auto t1 = std::chrono::high_resolution_clock::now();
+        /*for(size_t i = 0; i < NUMBER_OF_TASKS / 10; ++i)// very long work
+        {
+            auto it =  a.begin() + (rand() % (NUMBER_OF_TASKS - 1));
+            pool.cancelTask(*it);
+        }*/
 
         for (auto it = a.begin(); it != a.end(); ++it)
         {
@@ -62,7 +68,6 @@ int main(int argc, char *argv[])
 
         flag = false;
     }
-
 
     std::ofstream output_file("./results.txt");
     std::ostream_iterator<double> output_iterator(output_file, "\n");
