@@ -8,7 +8,7 @@
 #include "logging.h"
 
 #define NUMBER_OF_THREADS 4
-#define NUMBER_OF_TASKS   1000000
+#define NUMBER_OF_TASKS   10000
 
 int* TestMas = new int[NUMBER_OF_TASKS];
 bool flag = false;
@@ -20,7 +20,7 @@ int testStressFunc(int i)
 
     TestMas[i] = i;
 
-    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds((1 + (rand() % 100))));
 
     return i;
 }
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
         flag = true;
 
-        /*for(size_t i = 0; i < NUMBER_OF_TASKS / 10; ++i)// very long work
+        /*for(size_t i = 0; i < NUMBER_OF_TASKS / 10; ++i)
         {
             auto it =  a.begin() + (rand() % (NUMBER_OF_TASKS - 1));
             pool.cancelTask(*it);
