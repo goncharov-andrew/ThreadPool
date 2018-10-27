@@ -27,7 +27,7 @@ int testStressFunc(int i)
 
 int main(int argc, char *argv[])
 {
-    ThrPool pool(SIZE);
+    ThrPool pool(NUMBER_OF_THREADS);
 
     std::vector<double> timeResults;
 
@@ -35,18 +35,20 @@ int main(int argc, char *argv[])
     {
         std::vector<ThrPool::Task<int>> a;
 
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         for (size_t i = 0; i < NUMBER_OF_TASKS; ++i)
         {
-            a.push_back(pool.addTask(1, testStressFunc, i));
+            a.push_back(pool.addTask(rand() % 5, testStressFunc, i));//
         }
 
         flag = true;
 
-        /*for(size_t i = 0; i < NUMBER_OF_TASKS / 10; ++i)
+        for(size_t i = 0; i < NUMBER_OF_TASKS / 10; ++i)
         {
             auto it =  a.begin() + (rand() % (NUMBER_OF_TASKS - 1));
             pool.cancelTask(*it);
-        }*/
+        }
 
         for (auto it = a.begin(); it != a.end(); ++it)
         {

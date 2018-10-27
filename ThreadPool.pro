@@ -56,6 +56,8 @@ INCLUDEPATH *= \
 SOURCES += \
     $$GTEST_SRCDIR/src/gtest-all.cc \
     $$GMOCK_SRCDIR/src/gmock-all.cc
+
+INCLUDEPATH += E:/boost_1_67_0/boost_mingw_53/include/boost-1_67/
 }
 
 unix {
